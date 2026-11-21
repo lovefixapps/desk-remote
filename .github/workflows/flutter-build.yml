@@ -9,6 +9,9 @@ on:
       publish-release:
         type: boolean
         default: false
+      build-web:
+        type: boolean
+        default: false
       upload-tag:
         type: string
         default: "nightly"
@@ -1904,7 +1907,7 @@ jobs:
         if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.apk
+          name: rustdesk-${{ env.VERSION }}-universal.apk
           path: ${{steps.sign-rustdesk.outputs.signedReleaseFile}}
 
       - name: Publish signed apk package
@@ -2981,7 +2984,7 @@ jobs:
             flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.flatpak
 
   build-rustdesk-web:
-    if: False
+    if: ${{ inputs.build-web }}
     needs: [validate-update-metadata-keys]
     name: build-rustdesk-web
     runs-on: ubuntu-22.04
