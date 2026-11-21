@@ -1,9 +1,6 @@
-name: Flutter Nightly Build
+name: FIX-Desk All-Platform Validation
 
 on:
-  schedule:
-    # schedule build every night
-    - cron: "0 0 * * *"
   workflow_dispatch:
 
 jobs:
@@ -12,4 +9,5 @@ jobs:
     secrets: inherit
     with:
       upload-artifact: true
-      upload-tag: "nightly"
+      upload-tag: "fixdesk-validation"
+      publish-release: false
