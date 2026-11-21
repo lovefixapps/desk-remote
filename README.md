@@ -9,21 +9,19 @@
 </p>
 
 > [!Caution]
-> **Misuse Disclaimer:** <br>
-> The developers of RustDesk do not condone or support any unethical or illegal use of this software. Misuse, such as unauthorized access, control or invasion of privacy, is strictly against our guidelines. The authors are not responsible for any misuse of the application.
+> **Authorized use only:** <br>
+> Use FIX-Desk only on devices you own or are authorized to access. Unauthorized access or invasion of privacy is not permitted.
 
 
-Chat with us: [Discord](https://discord.gg/nDceKgxnkV) | [Twitter](https://twitter.com/rustdesk) | [Reddit](https://www.reddit.com/r/rustdesk) | [YouTube](https://www.youtube.com/@rustdesk)
+Support: [GitHub Issues](https://github.com/lovefixapps/desk-remote/issues)
 
-[![RustDesk Server Pro](https://img.shields.io/badge/RustDesk%20Server%20Pro-Advanced%20Features-blue)](https://rustdesk.com/pricing.html)
-
-FIX-Desk is a custom-branded remote desktop application based on the RustDesk open-source project. It supports self-hosted rendezvous and relay servers; see the [RustDesk server documentation](https://rustdesk.com/docs/en/self-host/) for setup guidance.
+FIX-Desk is a custom-branded remote desktop application based on the RustDesk open-source project. It supports self-hosted rendezvous and relay servers; see the [self-hosted server setup guide](https://rustdesk.com/docs/en/self-host/) for setup guidance.
 
 ![FIX-Desk overview mockup](docs/screenshots/fixdesk-overview.svg)
 
 FIX-Desk welcomes contributions from everyone. See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for help getting started.
 
-[**FAQ**](https://github.com/rustdesk/rustdesk/wiki/FAQ)
+[**SUPPORT / QUESTIONS**](https://github.com/lovefixapps/desk-remote/issues)
 
 [**BUILD / DOWNLOAD WINDOWS EXE**](https://github.com/lovefixapps/desk-remote/actions/workflows/fixdesk-windows-exe.yml)
 
@@ -31,7 +29,7 @@ Run the workflow to build the portable Windows x64 EXE, then download its artifa
 
 ## Dependencies
 
-Desktop versions use Flutter or Sciter (deprecated) for GUI. This tutorial is for Sciter only, since it is easier and more friendly to start. Check out our [CI](https://github.com/rustdesk/rustdesk/blob/master/.github/workflows/flutter-build.yml) for building the Flutter version.
+Desktop versions use Flutter or Sciter (deprecated) for GUI. This tutorial is for Sciter only, since it is easier and more friendly to start. Use the [FIX-Desk Windows EXE workflow](https://github.com/lovefixapps/desk-remote/actions/workflows/fixdesk-windows-exe.yml) to build the portable Windows version.
 
 Please download Sciter dynamic library yourself.
 
@@ -50,7 +48,7 @@ Please download Sciter dynamic library yourself.
 
 - run `cargo run`
 
-## [Build](https://rustdesk.com/docs/en/dev/build/)
+## Build
 
 ## How to Build on Linux
 
@@ -110,8 +108,8 @@ cd
 ```sh
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
-git clone --recurse-submodules https://github.com/rustdesk/rustdesk
-cd rustdesk
+git clone --recurse-submodules https://github.com/lovefixapps/desk-remote
+cd desk-remote
 mkdir -p target/debug
 wget https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.lnx/x64/libsciter-gtk.so
 mv libsciter-gtk.so target/debug
@@ -123,16 +121,16 @@ VCPKG_ROOT=$HOME/vcpkg cargo run
 Begin by cloning the repository and building the Docker container:
 
 ```sh
-git clone https://github.com/rustdesk/rustdesk
-cd rustdesk
+git clone https://github.com/lovefixapps/desk-remote
+cd desk-remote
 git submodule update --init --recursive
-docker build -t "rustdesk-builder" .
+docker build -t "fixdesk-builder" .
 ```
 
 Then, each time you need to build the application, run the following command:
 
 ```sh
-docker run --rm -it -v $PWD:/home/user/rustdesk -v rustdesk-git-cache:/home/user/.cargo/git -v rustdesk-registry-cache:/home/user/.cargo/registry -e PUID="$(id -u)" -e PGID="$(id -g)" rustdesk-builder
+docker run --rm -it -v $PWD:/home/user/rustdesk -v fixdesk-git-cache:/home/user/.cargo/git -v fixdesk-registry-cache:/home/user/.cargo/registry -e PUID="$(id -u)" -e PGID="$(id -g)" fixdesk-builder
 ```
 
 Note that the first build may take longer before dependencies are cached, subsequent builds will be faster. Additionally, if you need to specify different arguments to the build command, you may do so at the end of the command in the `<OPTIONAL-ARGS>` position. For instance, if you wanted to build an optimized release version, you would run the command above followed by `--release`. The resulting executable will be available in the target folder on your system, and can be run with:

@@ -1609,9 +1609,9 @@ String translate(String name) {
     return name.split(': ').map((x) => translate(x)).join(': ');
   }
   final translated = platformFFI.translate(name, localeName);
-  if (name.startsWith('upgrade_rustdesk_server_pro') ||
-      name == 'powered_by_me') {
-    return translated;
+  if (kAppDisplayName != 'RustDesk' &&
+      name.startsWith('upgrade_rustdesk_server_pro')) {
+    return translated.replaceAll('RustDesk ', '');
   }
   return translated.replaceAll('RustDesk', kAppDisplayName);
 }
@@ -3784,7 +3784,7 @@ Widget loadPowered(BuildContext context) {
     cursor: SystemMouseCursors.click,
     child: GestureDetector(
       onTap: () {
-        launchUrl(Uri.parse('https://rustdesk.com'));
+        launchUrl(Uri.parse('https://github.com/lovefixapps/desk-remote'));
       },
       child: Opacity(
           opacity: 0.5,
