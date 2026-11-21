@@ -61,6 +61,7 @@ final isWebDesktop = isWebDesktop_;
 final isWebOnWindows = isWebOnWindows_;
 final isWebOnLinux = isWebOnLinux_;
 final isWebOnMacOs = isWebOnMacOS_;
+const String kAppDisplayName = 'FIX-Desk';
 var isMobile = isAndroid || isIOS;
 var version = '';
 int androidVersion = 0;
@@ -1607,7 +1608,12 @@ String translate(String name) {
   if (name.startsWith('Failed to') && name.contains(': ')) {
     return name.split(': ').map((x) => translate(x)).join(': ');
   }
-  return platformFFI.translate(name, localeName);
+  final translated = platformFFI.translate(name, localeName);
+  if (name.startsWith('upgrade_rustdesk_server_pro') ||
+      name == 'powered_by_me') {
+    return translated;
+  }
+  return translated.replaceAll('RustDesk', kAppDisplayName);
 }
 
 // This function must be kept the same as the one in rust and sciter code.
@@ -3061,7 +3067,7 @@ int versionCmp(String v1, String v2) {
 }
 
 String getWindowName({WindowType? overrideType}) {
-  final name = bind.mainGetAppNameSync();
+  final name = kAppDisplayName;
   switch (overrideType ?? kWindowType) {
     case WindowType.Main:
       return name;

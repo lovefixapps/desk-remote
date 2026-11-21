@@ -9,6 +9,9 @@ This project is mainly derived from <https://github.com/MediaPortal/MediaPortal-
 1. `python preprocess.py`, see `python preprocess.py -h` for help.
 2. Build the .sln solution.
 
+Use `--display-name` to set the name shown by the installer without changing
+`--app-name`, which still controls the executable and package identity.
+
 Run `msiexec /i package.msi /l*v install.log` to record the log.
 
 ## Usage

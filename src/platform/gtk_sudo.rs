@@ -595,7 +595,7 @@ fn password_prompt(
     show_edit: bool,
 ) -> Option<(String, String)> {
     let dialog = gtk::Dialog::builder()
-        .title(crate::get_app_name())
+        .title(crate::get_app_display_name())
         .modal(true)
         .build();
     // https://docs.gtk.org/gtk4/method.Dialog.set_default_response.html
