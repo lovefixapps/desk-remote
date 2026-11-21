@@ -25,16 +25,9 @@ FIX-Desk welcomes contributions from everyone. See [CONTRIBUTING.md](docs/CONTRI
 
 [**FAQ**](https://github.com/rustdesk/rustdesk/wiki/FAQ)
 
-[**BINARY DOWNLOAD**](https://github.com/rustdesk/rustdesk/releases)
+[**BUILD / DOWNLOAD WINDOWS EXE**](https://github.com/lovefixapps/desk-remote/actions/workflows/fixdesk-windows-exe.yml)
 
-[**NIGHTLY BUILD**](https://github.com/rustdesk/rustdesk/releases/tag/nightly)
-
-[<img src="https://f-droid.org/badge/get-it-on.png"
-    alt="Get it on F-Droid"
-    height="80">](https://f-droid.org/en/packages/com.carriez.flutter_hbb)
-[<img src="https://flathub.org/api/badge?svg&locale=en"
-    alt="Get it on Flathub"
-    height="80">](https://flathub.org/apps/com.rustdesk.RustDesk)
+Run the workflow to build the portable Windows x64 EXE, then download its artifact. Artifacts are retained for 14 days. FIX-Desk is not currently listed on F-Droid or Flathub.
 
 ## Dependencies
 
