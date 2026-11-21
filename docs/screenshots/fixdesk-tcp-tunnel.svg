@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">FIX-Desk TCP tunnel mockup</title>
+  <desc id="desc">Illustrative TCP tunnel panel using a reserved sample host name.</desc>
+  <rect width="1280" height="720" fill="#edf2fa"/>
+  <rect x="48" y="42" width="1184" height="636" rx="18" fill="#fff" stroke="#d8dfeb" stroke-width="2"/>
+  <path d="M66 42h1148a18 18 0 0 1 18 18v48H48V60a18 18 0 0 1 18-18z" fill="#f8faff"/>
+  <circle cx="78" cy="78" r="7" fill="#ff6d6d"/><circle cx="102" cy="78" r="7" fill="#ffc34d"/><circle cx="126" cy="78" r="7" fill="#50c878"/>
+  <rect x="160" y="61" width="34" height="34" rx="10" fill="#5378f6"/>
+  <path d="M177 68v20m-10-10h20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  <text x="208" y="84" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#26354b">FIX-Desk</text>
+  <text x="1032" y="83" font-family="Segoe UI,Arial,sans-serif" font-size="14" fill="#78859a">TCP tunnel mockup</text>
+  <path d="M48 108h1184" stroke="#e5e9f1" stroke-width="2"/>
+  <text x="90" y="174" font-family="Segoe UI,Arial,sans-serif" font-size="28" font-weight="700" fill="#26354b">TCP tunneling</text>
+  <text x="90" y="204" font-family="Segoe UI,Arial,sans-serif" font-size="15" fill="#7a879b">Forward a local port to a service on a remote device.</text>
+  <rect x="70" y="239" width="1140" height="82" rx="13" fill="#eff4ff" stroke="#dae4fa"/>
+  <circle cx="108" cy="280" r="18" fill="#d9e5ff"/>
+  <path d="M98 280h20m-6-7 7 7-7 7" fill="none" stroke="#5378f6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="144" y="276" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="#344258">New tunnel</text>
+  <text x="144" y="298" font-family="Segoe UI,Arial,sans-serif" font-size="13" fill="#7a879b">Use example.internal as sample remote host.</text>
+  <text x="90" y="372" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="600" fill="#6e7b90">LOCAL PORT</text>
+  <text x="354" y="372" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="600" fill="#6e7b90">REMOTE HOST</text>
+  <text x="762" y="372" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="600" fill="#6e7b90">REMOTE PORT</text>
+  <rect x="90" y="388" width="220" height="50" rx="9" fill="#fff" stroke="#dce3ee"/>
+  <rect x="332" y="388" width="390" height="50" rx="9" fill="#fff" stroke="#dce3ee"/>
+  <rect x="744" y="388" width="220" height="50" rx="9" fill="#fff" stroke="#dce3ee"/>
+  <text x="112" y="420" font-family="Segoe UI,Arial,sans-serif" font-size="15" fill="#344258">3389</text>
+  <text x="354" y="420" font-family="Segoe UI,Arial,sans-serif" font-size="15" fill="#344258">example.internal</text>
+  <text x="766" y="420" font-family="Segoe UI,Arial,sans-serif" font-size="15" fill="#344258">3389</text>
+  <rect x="986" y="388" width="170" height="50" rx="9" fill="#5378f6"/>
+  <text x="1071" y="420" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="#fff">Add tunnel</text>
+  <rect x="90" y="468" width="1066" height="68" rx="10" fill="#fbfcff" stroke="#e3e8f0"/>
+  <circle cx="120" cy="502" r="9" fill="#3ecb83"/>
+  <text x="148" y="498" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="#344258">3389</text>
+  <text x="354" y="498" font-family="Segoe UI,Arial,sans-serif" font-size="15" fill="#46546a">example.internal</text>
+  <text x="766" y="498" font-family="Segoe UI,Arial,sans-serif" font-size="15" fill="#46546a">3389</text>
+  <text x="148" y="520" font-family="Segoe UI,Arial,sans-serif" font-size="12" fill="#8793a6">Sample tunnel • Listening</text>
+</svg>

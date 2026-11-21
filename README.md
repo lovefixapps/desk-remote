@@ -3,7 +3,7 @@
   <a href="#raw-steps-to-build">Build</a> •
   <a href="#how-to-build-with-docker">Docker</a> •
   <a href="#file-structure">Structure</a> •
-  <a href="#screenshots">Screenshots</a><br>
+  <a href="#interface-previews">Interface previews</a><br>
   [<a href="docs/README-UA.md">Українська</a>] | [<a href="docs/README-CS.md">česky</a>] | [<a href="docs/README-ZH.md">中文</a>] | [<a href="docs/README-HU.md">Magyar</a>] | [<a href="docs/README-ES.md">Español</a>] | [<a href="docs/README-FA.md">فارسی</a>] | [<a href="docs/README-FR.md">Français</a>] | [<a href="docs/README-DE.md">Deutsch</a>] | [<a href="docs/README-PL.md">Polski</a>] | [<a href="docs/README-ID.md">Indonesian</a>] | [<a href="docs/README-FI.md">Suomi</a>] | [<a href="docs/README-ML.md">മലയാളം</a>] | [<a href="docs/README-JP.md">日本語</a>] | [<a href="docs/README-NL.md">Nederlands</a>] | [<a href="docs/README-IT.md">Italiano</a>] | [<a href="docs/README-RU.md">Русский</a>] | [<a href="docs/README-PTPT.md">Português (Portugal)</a>] | [<a href="docs/README-PTBR.md">Português (Brasil)</a>] | [<a href="docs/README-EO.md">Esperanto</a>] | [<a href="docs/README-KR.md">한국어</a>] | [<a href="docs/README-AR.md">العربي</a>] | [<a href="docs/README-VN.md">Tiếng Việt</a>] | [<a href="docs/README-DA.md">Dansk</a>] | [<a href="docs/README-GR.md">Ελληνικά</a>] | [<a href="docs/README-TR.md">Türkçe</a>] | [<a href="docs/README-NO.md">Norsk</a>] | [<a href="docs/README-RO.md">Română</a>] | [<a href="docs/README-KA.md">ქართული</a>]<br>
   <b>We need your help to translate this README and FIX-Desk UI to your native language. This project is based on <a href="https://github.com/rustdesk/rustdesk">RustDesk</a>.</b>
 </p>
@@ -19,7 +19,7 @@ Chat with us: [Discord](https://discord.gg/nDceKgxnkV) | [Twitter](https://twitt
 
 FIX-Desk is a custom-branded remote desktop application based on the RustDesk open-source project. It supports self-hosted rendezvous and relay servers; see the [RustDesk server documentation](https://rustdesk.com/docs/en/self-host/) for setup guidance.
 
-![image](https://user-images.githubusercontent.com/71636191/171661982-430285f0-2e12-4b1d-9957-4a58e375304d.png)
+![FIX-Desk overview mockup](docs/screenshots/fixdesk-overview.svg)
 
 FIX-Desk welcomes contributions from everyone. See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for help getting started.
 
@@ -170,13 +170,15 @@ Please ensure that you run these commands from the root of the FIX-Desk reposito
 - **[src/platform](https://github.com/rustdesk/rustdesk/tree/master/src/platform)**: platform specific code
 - **[flutter](https://github.com/rustdesk/rustdesk/tree/master/flutter)**: Flutter code for desktop and mobile
 
-## Screenshots
+## Interface previews
 
-![Connection Manager](https://github.com/rustdesk/rustdesk/assets/28412477/db82d4e7-c4bc-4823-8e6f-6af7eadf7651)
+These are illustrative mockups, not live screenshots. Device IDs, host names, and file names are hidden or sample data.
 
-![Connected to a Windows PC](https://github.com/rustdesk/rustdesk/assets/28412477/9baa91e9-3362-4d06-aa1a-7518edcbd7ea)
+![FIX-Desk connection manager mockup](docs/screenshots/fixdesk-connection-manager.svg)
 
-![File Transfer](https://github.com/rustdesk/rustdesk/assets/28412477/39511ad3-aa9a-4f8c-8947-1cce286a46ad)
+![FIX-Desk remote session mockup](docs/screenshots/fixdesk-remote-session.svg)
 
-![TCP Tunneling](https://github.com/rustdesk/rustdesk/assets/28412477/78e8708f-e87e-4570-8373-1360033ea6c5)
+![FIX-Desk file transfer mockup](docs/screenshots/fixdesk-file-transfer.svg)
+
+![FIX-Desk TCP tunnel mockup](docs/screenshots/fixdesk-tcp-tunnel.svg)
 

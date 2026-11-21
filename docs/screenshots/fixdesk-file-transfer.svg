@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">FIX-Desk file transfer mockup</title>
+  <desc id="desc">Illustrative two-pane file transfer window with generic sample files.</desc>
+  <rect width="1280" height="720" fill="#edf2fa"/>
+  <rect x="48" y="42" width="1184" height="636" rx="18" fill="#fff" stroke="#d8dfeb" stroke-width="2"/>
+  <path d="M66 42h1148a18 18 0 0 1 18 18v48H48V60a18 18 0 0 1 18-18z" fill="#f8faff"/>
+  <circle cx="78" cy="78" r="7" fill="#ff6d6d"/><circle cx="102" cy="78" r="7" fill="#ffc34d"/><circle cx="126" cy="78" r="7" fill="#50c878"/>
+  <rect x="160" y="61" width="34" height="34" rx="10" fill="#5378f6"/>
+  <path d="M177 68v20m-10-10h20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  <text x="208" y="84" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#26354b">FIX-Desk</text>
+  <text x="1054" y="83" font-family="Segoe UI,Arial,sans-serif" font-size="14" fill="#78859a">File transfer mockup</text>
+  <path d="M48 108h1184" stroke="#e5e9f1" stroke-width="2"/>
+  <text x="82" y="154" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="700" fill="#26354b">File transfer</text>
+  <rect x="68" y="178" width="548" height="374" rx="12" fill="#fff" stroke="#dce3ee" stroke-width="2"/>
+  <rect x="664" y="178" width="548" height="374" rx="12" fill="#fff" stroke="#dce3ee" stroke-width="2"/>
+  <path d="M68 190a12 12 0 0 1 12-12h524v58H68z" fill="#f7f9fd"/>
+  <path d="M664 190a12 12 0 0 1 12-12h524v58H664z" fill="#f7f9fd"/>
+  <text x="94" y="215" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="700" fill="#344258">This computer</text>
+  <text x="690" y="215" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="700" fill="#344258">Sample remote computer</text>
+  <text x="94" y="278" font-family="Segoe UI,Arial,sans-serif" font-size="14" fill="#7a879b">Name</text>
+  <text x="376" y="278" font-family="Segoe UI,Arial,sans-serif" font-size="14" fill="#7a879b">Size</text>
+  <text x="690" y="278" font-family="Segoe UI,Arial,sans-serif" font-size="14" fill="#7a879b">Name</text>
+  <text x="972" y="278" font-family="Segoe UI,Arial,sans-serif" font-size="14" fill="#7a879b">Size</text>
+  <path d="M88 292h508M684 292h508" stroke="#e8ecf3"/>
+  <g font-family="Segoe UI,Arial,sans-serif" font-size="14" fill="#46546a">
+    <text x="112" y="331">Documents</text><text x="376" y="331">Folder</text>
+    <text x="112" y="377">Project notes.txt</text><text x="376" y="377">12 KB</text>
+    <text x="112" y="423">Presentation.pptx</text><text x="376" y="423">2.4 MB</text>
+    <text x="708" y="331">Shared files</text><text x="972" y="331">Folder</text>
+    <text x="708" y="377">Design review.pdf</text><text x="972" y="377">840 KB</text>
+    <text x="708" y="423">Readme.txt</text><text x="972" y="423">4 KB</text>
+  </g>
+  <rect x="68" y="574" width="1144" height="58" rx="11" fill="#f7f9fd"/>
+  <text x="94" y="609" font-family="Segoe UI,Arial,sans-serif" font-size="14" fill="#46546a">Sample transfer</text>
+  <rect x="236" y="596" width="680" height="12" rx="6" fill="#e0e6f0"/>
+  <rect x="236" y="596" width="408" height="12" rx="6" fill="#5378f6"/>
+  <text x="948" y="609" font-family="Segoe UI,Arial,sans-serif" font-size="13" fill="#748197">60% complete</text>
+</svg>
