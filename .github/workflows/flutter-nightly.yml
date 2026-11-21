@@ -3,6 +3,9 @@ name: FIX-Desk All-Platform Validation
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   run-flutter-nightly-build:
     uses: ./.github/workflows/flutter-build.yml
