@@ -2288,9 +2288,9 @@ jobs:
         if: matrix.job.arch == 'x86_64' && env.UPLOAD_ARTIFACT == 'true'
         shell: bash
         run: |
-          mapfile -d '' packages < <(find . -type f -name 'rustdesk*.pkg.tar.zst' -print0)
+          mapfile -d '' packages < <(find . -type f -name 'rustdesk-${{ env.VERSION }}-*.pkg.tar.zst' -print0)
           if [ "${#packages[@]}" -ne 1 ]; then
-            echo "::error::expected one Arch package, found ${#packages[@]}: ${packages[*]-none}"
+            echo "::error::expected one Arch release package for ${{ env.VERSION }}, found ${#packages[@]}: ${packages[*]-none}"
             exit 1
           fi
           package="${packages[0]}"
