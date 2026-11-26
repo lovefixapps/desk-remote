@@ -2295,7 +2295,8 @@ jobs:
           fi
           package="${packages[0]}"
           renamed_package="${package/rustdesk/FIX-Desk}"
-          mv "$package" "$renamed_package"
+          sudo mv "$package" "$renamed_package"
+          sudo chown "$(id -u):$(id -g)" "$renamed_package"
           echo "ARCH_PACKAGE=$renamed_package" >> "$GITHUB_ENV"
 
       - name: Publish archlinux package
