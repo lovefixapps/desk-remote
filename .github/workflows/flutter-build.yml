@@ -2288,13 +2288,15 @@ jobs:
         if: matrix.job.arch == 'x86_64' && env.UPLOAD_ARTIFACT == 'true'
         shell: bash
         run: |
-          shopt -s nullglob
-          packages=(res/rustdesk*.pkg.tar.zst)
+          mapfile -d '' packages < <(find . -type f -name 'rustdesk*.pkg.tar.zst' -print0)
           if [ "${#packages[@]}" -ne 1 ]; then
             echo "::error::expected one Arch package, found ${#packages[@]}: ${packages[*]-none}"
             exit 1
           fi
-          mv "${packages[0]}" "${packages[0]/rustdesk/FIX-Desk}"
+          package="${packages[0]}"
+          renamed_package="${package/rustdesk/FIX-Desk}"
+          mv "$package" "$renamed_package"
+          echo "ARCH_PACKAGE=$renamed_package" >> "$GITHUB_ENV"
 
       - name: Publish archlinux package
         if: matrix.job.arch == 'x86_64' && env.UPLOAD_ARTIFACT == 'true' && env.PUBLISH_RELEASE == 'true'
@@ -2303,7 +2305,7 @@ jobs:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
           files: |
-            res/FIX-Desk-${{ env.VERSION }}*.zst
+            ${{ env.ARCH_PACKAGE }}
 
   # Same build as build-rustdesk-linux x86_64 -- same vcpkg/ffmpeg, same ubuntu18.04 container, same
   # rust and flutter -- only with the drm feature on, so it ships as the separate
