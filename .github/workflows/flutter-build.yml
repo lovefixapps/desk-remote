@@ -2215,7 +2215,9 @@ jobs:
               popd
             fi
             for name in rustdesk*??.deb; do
-              mv "$name" "FIX-Desk${name#rustdesk}-${{ matrix.job.arch }}.deb"
+              base="${name#rustdesk}"
+              base="${base%.deb}"
+              mv "$name" "FIX-Desk${base}-${{ matrix.job.arch }}.deb"
             done
 
             # rpm package
@@ -2579,7 +2581,9 @@ jobs:
             export DEB_ARCH=amd64
             python3 ./build.py --flutter --drm --hwcodec --unix-file-copy-paste --skip-cargo
             for name in rustdesk*??.deb; do
-              mv "$name" "FIX-Desk${name#rustdesk}-x86_64.deb"
+              base="${name#rustdesk}"
+              base="${base%.deb}"
+              mv "$name" "FIX-Desk${base}-x86_64.deb"
             done
 
       # build.py can exit 0 on some inner failures, so check the artifact rather than the status.
@@ -2856,7 +2860,9 @@ jobs:
         run: |
           for name in rustdesk*??.deb; do
               # use cp to duplicate deb files to fit other packages.
-              cp "$name" "FIX-Desk${name#rustdesk}-${{ matrix.job.arch }}-sciter.deb"
+              base="${name#rustdesk}"
+              base="${base%.deb}"
+              cp "$name" "FIX-Desk${base}-${{ matrix.job.arch }}-sciter.deb"
           done
 
       - name: Publish debian package
