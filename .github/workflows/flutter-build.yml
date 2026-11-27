@@ -2934,7 +2934,9 @@ jobs:
             echo "::error::expected one AppImage, found ${#images[@]}: ${images[*]-none}"
             exit 1
           fi
-          mv "${images[0]}" "${images[0]/rustdesk-/FIX-Desk-}"
+          renamed_image="${images[0]/rustdesk-/FIX-Desk-}"
+          sudo mv "${images[0]}" "$renamed_image"
+          sudo chown "$(id -u):$(id -g)" "$renamed_image"
 
       - name: Publish appimage package
         if: env.UPLOAD_ARTIFACT == 'true' && env.PUBLISH_RELEASE == 'true'
