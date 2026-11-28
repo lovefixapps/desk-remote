@@ -380,15 +380,35 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                                 ),
                                 const SizedBox(width: 7),
                                 Expanded(
-                                  child: Text(
-                                    kAppDisplayName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: theme.textTheme.titleMedium?.color,
-                                    ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        kAppDisplayName,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: theme
+                                              .textTheme.titleMedium?.color,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Dev : Samnang',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w500,
+                                          color: theme.hintColor,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
