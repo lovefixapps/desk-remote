@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hbb/common/widgets/app_brand.dart';
 import 'package:flutter_hbb/mobile/pages/server_page.dart';
 import 'package:flutter_hbb/mobile/pages/settings_page.dart';
 import 'package:flutter_hbb/web/settings_page.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../common.dart';
 import '../../common/widgets/chat_page.dart';
 import '../../models/platform_model.dart';
@@ -77,7 +80,14 @@ class HomePageState extends State<HomePage> {
           appBar: AppBar(
             centerTitle: true,
             title: appTitle(),
-            actions: _pages.elementAt(_selectedIndex).appBarActions,
+            actions: [
+              ..._pages.elementAt(_selectedIndex).appBarActions,
+              AppMoreMenu(
+                onSettings: () => setState(() {
+                  _selectedIndex = _pages.length - 1;
+                }),
+              ),
+            ],
           ),
           bottomNavigationBar: BottomNavigationBar(
             key: navigationBarKey,
@@ -150,7 +160,7 @@ class HomePageState extends State<HomePage> {
         ],
       );
     }
-    return Text(kAppDisplayName);
+    return const AppBrand(iconSize: 26, fontSize: 18);
   }
 }
 
@@ -166,8 +176,18 @@ class WebHomePage extends StatelessWidget {
       // backgroundColor: MyTheme.grayBg,
       appBar: AppBar(
         centerTitle: true,
-        title: Text("$kAppDisplayName (Preview)"),
-        actions: connectionPage.appBarActions,
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppBrand(iconSize: 26, fontSize: 18),
+            SizedBox(width: 6),
+            Text("(Preview)"),
+          ],
+        ),
+        actions: [
+          ...connectionPage.appBarActions,
+          const AppMoreMenu(),
+        ],
       ),
       body: connectionPage,
     );
@@ -192,6 +212,7 @@ class WebHomePage extends StatelessWidget {
         break;
       }
     }
+
     if (fakelink.isEmpty) {
       return;
     }
@@ -248,13 +269,55 @@ class WebHomePage extends StatelessWidget {
           break;
       }
     }
+
     if (id != null) {
-      connect(context, id, 
-        isFileTransfer: isFileTransfer, 
-        isViewCamera: isViewCamera, 
-        isTerminal: isTerminal,
-        loginMethod: loginMethod,
-        password: password);
+      connect(context, id,
+          isFileTransfer: isFileTransfer,
+          isViewCamera: isViewCamera,
+          isTerminal: isTerminal,
+          loginMethod: loginMethod,
+          password: password);
     }
+  }
+}
+
+class AppMoreMenu extends StatelessWidget {
+  const AppMoreMenu({Key? key, this.onSettings}) : super(key: key);
+
+  final VoidCallback? onSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      tooltip: translate('More'),
+      onSelected: (value) {
+        switch (value) {
+          case 'settings':
+            onSettings?.call();
+            break;
+          case 'help':
+            launchUrl(Uri.parse('https://rustdesk.com/docs/'));
+            break;
+          case 'about':
+            showAbout(gFFI.dialogManager);
+            break;
+        }
+      },
+      itemBuilder: (context) => [
+        if (onSettings != null)
+          PopupMenuItem(
+            value: 'settings',
+            child: Text(translate('Settings')),
+          ),
+        PopupMenuItem(
+          value: 'help',
+          child: Text(translate('Documentation')),
+        ),
+        PopupMenuItem(
+          value: 'about',
+          child: Text(translate('About')),
+        ),
+      ],
+    );
   }
 }

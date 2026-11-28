@@ -28,8 +28,8 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../../common/widgets/dialog.dart';
 import '../../common/widgets/login.dart';
 
-const double _kTabWidth = 200;
-const double _kTabHeight = 42;
+const double _kTabWidth = 208;
+const double _kTabHeight = 46;
 const double _kCardFixedWidth = 540;
 const double _kCardLeftMargin = 15;
 const double _kContentHMargin = 15;
@@ -306,15 +306,6 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
   }
 
   Widget _header(BuildContext context) {
-    final settingsText = Text(
-      translate('Settings'),
-      textAlign: TextAlign.left,
-      style: const TextStyle(
-        color: _accentColor,
-        fontSize: _kTitleFontSize,
-        fontWeight: FontWeight.w400,
-      ),
-    );
     return Row(
       children: [
         if (isWeb)
@@ -326,20 +317,57 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
             },
             icon: Icon(Icons.arrow_back),
           ).marginOnly(left: 5),
-        if (isWeb)
-          SizedBox(
+        Expanded(
+          child: Container(
             height: 62,
-            child: Align(
-              alignment: Alignment.center,
-              child: settingsText,
+            margin: EdgeInsets.fromLTRB(isWeb ? 8 : 16, 8, 12, 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _accentColor.withOpacity(0.14),
+                  _accentColor.withOpacity(0.055),
+                ],
+              ),
+              border: Border.all(
+                color: _accentColor.withOpacity(0.16),
+              ),
             ),
-          ).marginOnly(left: 20),
-        if (!isWeb)
-          SizedBox(
-            height: 62,
-            child: settingsText,
-          ).marginOnly(left: 20, top: 10),
-        const Spacer(),
+            child: Row(
+              children: [
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: _accentColor.withOpacity(0.14),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Padding(
+                    padding: const EdgeInsets.all(3),
+                    child: loadIcon(24),
+                  ),
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    translate('Settings'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: _accentColor,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -348,53 +376,157 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
     final scrollController = ScrollController();
     return ListView(
       controller: scrollController,
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
       children: tabs.map((tab) => _listItem(tab: tab)).toList(),
     );
   }
 
   Widget _listItem({required _TabInfo tab}) {
+    return _SettingsNavItem(
+      tab: tab,
+      selectedTab: selectedTab,
+      controller: controller,
+    );
+  }
+}
+
+//#region pages
+
+class _SettingsNavItem extends StatefulWidget {
+  const _SettingsNavItem({
+    required this.tab,
+    required this.selectedTab,
+    required this.controller,
+  });
+
+  final _TabInfo tab;
+  final Rx<SettingsTabKey> selectedTab;
+  final PageController controller;
+
+  @override
+  State<_SettingsNavItem> createState() => _SettingsNavItemState();
+}
+
+class _SettingsNavItemState extends State<_SettingsNavItem> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Obx(() {
-      bool selected = tab.key == selectedTab.value;
-      return SizedBox(
-        width: _kTabWidth,
-        height: _kTabHeight,
-        child: InkWell(
-          onTap: () {
-            if (selectedTab.value != tab.key) {
-              int index = DesktopSettingPage.tabKeys.indexOf(tab.key);
-              if (index == -1) {
-                return;
-              }
-              controller.jumpToPage(index);
-            }
-            selectedTab.value = tab.key;
-          },
-          child: Row(children: [
-            Container(
-              width: 4,
-              height: _kTabHeight * 0.7,
-              color: selected ? _accentColor : null,
+      final selected = widget.tab.key == widget.selectedTab.value;
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 5),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit: (_) => setState(() => _hovered = false),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            height: _kTabHeight,
+            decoration: BoxDecoration(
+              color: selected
+                  ? _accentColor.withOpacity(0.13)
+                  : _hovered
+                      ? _accentColor.withOpacity(0.065)
+                      : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: selected
+                    ? _accentColor.withOpacity(0.24)
+                    : _hovered
+                        ? _accentColor.withOpacity(0.10)
+                        : Colors.transparent,
+              ),
             ),
-            Icon(
-              selected ? tab.selected : tab.unselected,
-              color: selected ? _accentColor : null,
-              size: 20,
-            ).marginOnly(left: 13, right: 10),
-            Text(
-              translate(tab.label),
-              style: TextStyle(
-                  color: selected ? _accentColor : null,
-                  fontWeight: FontWeight.w400,
-                  fontSize: _kContentFontSize),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  if (widget.selectedTab.value != widget.tab.key) {
+                    final index =
+                        DesktopSettingPage.tabKeys.indexOf(widget.tab.key);
+                    if (index == -1) {
+                      return;
+                    }
+                    widget.controller.animateToPage(
+                      index,
+                      duration: const Duration(milliseconds: 260),
+                      curve: Curves.easeOutCubic,
+                    );
+                  }
+                  widget.selectedTab.value = widget.tab.key;
+                },
+                child: Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOutCubic,
+                      width: 3,
+                      height: selected ? 26 : 0,
+                      decoration: BoxDecoration(
+                        color: _accentColor,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                    AnimatedScale(
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOutBack,
+                      scale: selected ? 1.08 : (_hovered ? 1.03 : 1),
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        margin: const EdgeInsets.only(left: 10, right: 8),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? _accentColor.withOpacity(0.14)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(9),
+                        ),
+                        child: Icon(
+                          selected
+                              ? widget.tab.selected
+                              : widget.tab.unselected,
+                          color: selected
+                              ? _accentColor
+                              : theme.textTheme.bodyMedium?.color
+                                  ?.withOpacity(0.72),
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeOutCubic,
+                        style: TextStyle(
+                          color: selected
+                              ? _accentColor
+                              : theme.textTheme.bodyMedium?.color
+                                  ?.withOpacity(0.82),
+                          fontWeight:
+                              selected ? FontWeight.w700 : FontWeight.w500,
+                          fontSize: _kContentFontSize,
+                        ),
+                        child: Text(
+                          translate(widget.tab.label),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ]),
+          ),
         ),
       );
     });
   }
 }
-
-//#region pages
 
 class _General extends StatefulWidget {
   const _General({Key? key}) : super(key: key);
@@ -525,7 +657,10 @@ class _GeneralState extends State<_General> {
     final incomingOnly = bind.isIncomingOnly();
     final outgoingOnly = bind.isOutgoingOnly();
     final showAutoUpdate = (isWindows && bind.mainIsInstalled()) ||
-    (isMacOS && bind.mainIsInstalled() && bind.mainIsInstalledDaemon(prompt: false) && !bind.isCustomClient());
+        (isMacOS &&
+            bind.mainIsInstalled() &&
+            bind.mainIsInstalledDaemon(prompt: false) &&
+            !bind.isCustomClient());
     final children = <Widget>[
       if (!isWeb && !incomingOnly)
         _OptionCheckBox(context, 'Confirm before closing multiple tabs',
@@ -1145,15 +1280,16 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               child: _OptionCheckBox(context, "Enable trusted devices",
                   kOptionEnableTrustedDevices,
                   optSetter: (key, value) async {
-                try {
-                  await mainSetBoolOption(key, value);
-                } catch (error) {
-                  showToast(error.toString());
-                }
-              },
-                  enabled: !locked, update: (v) {
-                setState(() {});
-              }),
+                    try {
+                      await mainSetBoolOption(key, value);
+                    } catch (error) {
+                      showToast(error.toString());
+                    }
+                  },
+                  enabled: !locked,
+                  update: (v) {
+                    setState(() {});
+                  }),
             ),
           ),
           if (mainGetBoolOptionSync(kOptionEnableTrustedDevices))
@@ -2625,7 +2761,8 @@ class _AboutState extends State<_About> {
                   ).marginSymmetric(vertical: 4.0)),
               InkWell(
                   onTap: () {
-                    launchUrlString('https://github.com/lovefixapps/desk-remote');
+                    launchUrlString(
+                        'https://github.com/lovefixapps/desk-remote');
                   },
                   child: Text(
                     translate('Website'),
@@ -2675,32 +2812,106 @@ Widget _Card(
     {required String title,
     required List<Widget> children,
     List<Widget>? title_suffix}) {
+  final IconData icon = switch (title) {
+    'Theme' => Icons.palette_outlined,
+    'Language' => Icons.language_outlined,
+    'Service' => Icons.power_settings_new_rounded,
+    'Audio Input Device' => Icons.mic_none_rounded,
+    'Recording' => Icons.videocam_outlined,
+    'Hardware Codec' => Icons.memory_rounded,
+    'Keyboard shortcuts' => Icons.keyboard_outlined,
+    'Security' || 'Password' || '2FA' => Icons.shield_outlined,
+    'Account' => Icons.person_outline_rounded,
+    'Network' => Icons.hub_outlined,
+    'Display' => Icons.desktop_windows_outlined,
+    'Printer' => Icons.print_outlined,
+    'About' => Icons.info_outline_rounded,
+    _ => Icons.tune_rounded,
+  };
+
   return Row(
     children: [
       Flexible(
-        child: SizedBox(
-          width: _kCardFixedWidth,
-          child: Card(
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                        child: Text(
-                      translate(title),
-                      textAlign: TextAlign.start,
-                      style: const TextStyle(
-                        fontSize: _kTitleFontSize,
+        child: TweenAnimationBuilder<double>(
+          duration: const Duration(milliseconds: 360),
+          curve: Curves.easeOutCubic,
+          tween: Tween(begin: 0, end: 1),
+          builder: (context, value, child) {
+            final theme = Theme.of(context);
+            return Opacity(
+              opacity: value,
+              child: Transform.translate(
+                offset: Offset(0, (1 - value) * 10),
+                child: SizedBox(
+                  width: _kCardFixedWidth,
+                  child: Card(
+                    elevation: 0,
+                    margin: const EdgeInsets.fromLTRB(
+                      _kCardLeftMargin,
+                      15,
+                      0,
+                      0,
+                    ),
+                    color: theme.cardColor,
+                    surfaceTintColor: _accentColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: _accentColor.withOpacity(
+                          theme.brightness == Brightness.dark ? 0.12 : 0.09,
+                        ),
                       ),
-                    )),
-                    ...?title_suffix
-                  ],
-                ).marginOnly(left: _kContentHMargin, top: 10, bottom: 10),
-                ...children
-                    .map((e) => e.marginOnly(top: 4, right: _kContentHMargin)),
-              ],
-            ).marginOnly(bottom: 10),
-          ).marginOnly(left: _kCardLeftMargin, top: 15),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 34,
+                              height: 34,
+                              margin: const EdgeInsets.only(right: 10),
+                              decoration: BoxDecoration(
+                                color: _accentColor.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                icon,
+                                size: 18,
+                                color: _accentColor,
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                translate(title),
+                                textAlign: TextAlign.start,
+                                style: TextStyle(
+                                  fontSize: _kTitleFontSize,
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.textTheme.titleLarge?.color,
+                                ),
+                              ),
+                            ),
+                            ...?title_suffix,
+                          ],
+                        ).marginOnly(
+                          left: _kContentHMargin,
+                          right: _kContentHMargin,
+                          top: 10,
+                          bottom: 8,
+                        ),
+                        ...children.map(
+                          (e) => e.marginOnly(
+                            top: 4,
+                            right: _kContentHMargin,
+                          ),
+                        ),
+                      ],
+                    ).marginOnly(bottom: 10),
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     ],

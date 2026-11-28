@@ -5,8 +5,24 @@ import 'package:get/get.dart';
 import '../../common.dart';
 
 Widget getConnectionPageTitle(BuildContext context, bool isWeb) {
+  final accent = MyTheme.accent;
   return Row(
     children: [
+      Container(
+        width: 34,
+        height: 34,
+        margin: const EdgeInsets.only(right: 10),
+        decoration: BoxDecoration(
+          color: accent.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: accent.withOpacity(0.18)),
+        ),
+        child: Icon(
+          Icons.desktop_windows_rounded,
+          size: 18,
+          color: accent,
+        ),
+      ),
       Expanded(
           child: Row(
         children: [

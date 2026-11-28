@@ -244,6 +244,7 @@ class DesktopTab extends StatefulWidget {
   final Widget Function(Widget pageView)? pageViewBuilder;
   // Right click tab menu
   final TabMenuBuilder? tabMenuBuilder;
+  final Widget? leading;
   final Widget? tail;
   final Future<bool> Function()? onWindowCloseButton;
   final TabBuilder? tabBuilder;
@@ -269,6 +270,7 @@ class DesktopTab extends StatefulWidget {
     this.showClose = true,
     this.pageViewBuilder,
     this.tabMenuBuilder,
+    this.leading,
     this.tail,
     this.onWindowCloseButton,
     this.tabBuilder,
@@ -304,6 +306,7 @@ class _DesktopTabState extends State<DesktopTab>
   Widget Function(Widget pageView)? get pageViewBuilder =>
       widget.pageViewBuilder;
   TabMenuBuilder? get tabMenuBuilder => widget.tabMenuBuilder;
+  Widget? get leading => widget.leading;
   Widget? get tail => widget.tail;
   Future<bool> Function()? get onWindowCloseButton =>
       widget.onWindowCloseButton;
@@ -623,7 +626,9 @@ class _DesktopTabState extends State<DesktopTab>
                               .then((value) => stateGlobal.setMaximized(value));
                         }
                       }
-                    : (isIncomingHomePage ? () {} : null), // Keep tap recognizer for Windows touch.
+                    : (isIncomingHomePage
+                        ? () {}
+                        : null), // Keep tap recognizer for Windows touch.
                 onPanStart: (_) => startDragging(isMainWindow),
                 onPanCancel: () {
                   // We want to disable dragging of the tab area in the tab bar.
@@ -662,6 +667,7 @@ class _DesktopTabState extends State<DesktopTab>
                         right: 10,
                       ),
                     ),
+                    if (leading != null) leading!,
                     Expanded(
                         child: Listener(
                             // handle mouse wheel

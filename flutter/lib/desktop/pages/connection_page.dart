@@ -2,7 +2,6 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common/widgets/connection_page_title.dart';
@@ -36,9 +35,10 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
   final _svcStopped = Get.find<RxBool>(tag: 'stop-service');
   final _svcIsUsingPublicServer = true.obs;
   Timer? _updateTimer;
+  bool _isTogglingService = false;
 
   double get em => 14.0;
-  double? get height => bind.isIncomingOnly() ? null : em * 3;
+  double? get height => bind.isIncomingOnly() ? null : 48;
 
   void onUsePublicServerGuide() {
     const url = "https://rustdesk.com/docs/en/self-host/";
@@ -66,16 +66,32 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
   @override
   Widget build(BuildContext context) {
     final isIncomingOnly = bind.isIncomingOnly();
-    startServiceWidget() => Offstage(
-          offstage: !_svcStopped.value,
-          child: InkWell(
-                  onTap: () async {
-                    await start_service(true);
-                  },
-                  child: Text(translate("Start service"),
-                      style: TextStyle(
-                          decoration: TextDecoration.underline, fontSize: em)))
-              .marginOnly(left: em),
+    serviceToggleWidget() => FilledButton.icon(
+          onPressed: _isTogglingService ? null : _toggleService,
+          icon: _isTogglingService
+              ? const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(
+                  _svcStopped.value
+                      ? Icons.play_arrow_rounded
+                      : Icons.stop_rounded,
+                  size: 17,
+                ),
+          label: Text(translate(_svcStopped.value ? "Start" : "Stop")),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(0, 32),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            visualDensity: VisualDensity.compact,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            textStyle:
+                const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(9),
+            ),
+          ),
         );
 
     setupServerWidget() => Flexible(
@@ -83,28 +99,20 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
             offstage: !(!_svcStopped.value &&
                 stateGlobal.svcStatus.value == SvcStatus.ready &&
                 _svcIsUsingPublicServer.value),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(', ', style: TextStyle(fontSize: em)),
-                Flexible(
-                  child: InkWell(
-                    onTap: onUsePublicServerGuide,
-                    child: Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            translate('setup_server_tip'),
-                            style: TextStyle(
-                                decoration: TextDecoration.underline,
-                                fontSize: em),
-                          ),
-                        ),
-                      ],
-                    ),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: InkWell(
+                onTap: onUsePublicServerGuide,
+                child: Text(
+                  translate('Server'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    decoration: TextDecoration.underline,
+                    fontSize: em,
                   ),
-                )
-              ],
+                ),
+              ),
             ),
           ),
         );
@@ -112,7 +120,9 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
     basicWidget() => Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut,
               height: 8,
               width: 8,
               decoration: BoxDecoration(
@@ -124,13 +134,15 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
                         ? Color.fromARGB(255, 50, 190, 166)
                         : Color.fromARGB(255, 224, 79, 95)),
               ),
-            ).marginSymmetric(horizontal: em),
-            Container(
-              width: isIncomingOnly ? 226 : null,
-              child: _buildConnStatusMsg(),
-            ),
+            ).marginOnly(right: 10),
+            isIncomingOnly
+                ? Container(
+                    width: 226,
+                    child: _buildConnStatusMsg(),
+                  )
+                : Flexible(child: _buildConnStatusMsg()),
             // stop
-            if (!isIncomingOnly) startServiceWidget(),
+            if (!isIncomingOnly) serviceToggleWidget().marginOnly(left: 10),
             // ready && public
             // No need to show the guide if is custom client.
             if (!isIncomingOnly) setupServerWidget(),
@@ -139,18 +151,43 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
 
     return Container(
       height: height,
+      decoration: isIncomingOnly
+          ? null
+          : BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              border: Border(
+                top: BorderSide(
+                  color: Theme.of(context).dividerColor.withOpacity(0.45),
+                ),
+              ),
+            ),
+      padding: EdgeInsets.symmetric(
+        horizontal: isIncomingOnly ? 0 : 14,
+        vertical: isIncomingOnly ? 0 : 6,
+      ),
       child: Obx(() => isIncomingOnly
           ? Column(
               children: [
                 basicWidget(),
                 Align(
-                        child: startServiceWidget(),
+                        child: serviceToggleWidget(),
                         alignment: Alignment.centerLeft)
                     .marginOnly(top: 2.0, left: 22.0),
               ],
             )
           : basicWidget()),
     ).paddingOnly(right: isIncomingOnly ? 8 : 0);
+  }
+
+  Future<void> _toggleService() async {
+    if (_isTogglingService) return;
+    final shouldStart = _svcStopped.value;
+    setState(() => _isTogglingService = true);
+    try {
+      await start_service(shouldStart);
+    } finally {
+      if (mounted) setState(() => _isTogglingService = false);
+    }
   }
 
   _buildConnStatusMsg() {
@@ -164,6 +201,8 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
                   ? translate("not_ready_status")
                   : translate('Ready'),
       style: TextStyle(fontSize: em),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 
@@ -197,7 +236,7 @@ class ConnectionPage extends StatefulWidget {
 
 /// State for the connection page.
 class _ConnectionPageState extends State<ConnectionPage>
-    with SingleTickerProviderStateMixin, WindowListener {
+    with TickerProviderStateMixin, WindowListener {
   /// Controller for the id input bar.
   final _idController = IDTextEditingController();
 
@@ -215,10 +254,31 @@ class _ConnectionPageState extends State<ConnectionPage>
   Iterable<Peer> _autocompleteOpts = [];
 
   final _menuOpen = false.obs;
+  late final AnimationController _entryController;
+  late final AnimationController _orbitController;
+  late final Animation<double> _entryOpacity;
+  late final Animation<Offset> _entryOffset;
 
   @override
   void initState() {
     super.initState();
+    _entryController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
+    _orbitController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat();
+    final entryCurve = CurvedAnimation(
+      parent: _entryController,
+      curve: Curves.easeOutCubic,
+    );
+    _entryOpacity = entryCurve;
+    _entryOffset = Tween<Offset>(
+      begin: const Offset(0, 0.06),
+      end: Offset.zero,
+    ).animate(entryCurve);
     _allPeersLoader.init(setState);
     _idFocusNode.addListener(onFocusChanged);
     if (_idController.text.isEmpty) {
@@ -234,10 +294,15 @@ class _ConnectionPageState extends State<ConnectionPage>
     Get.put<TextEditingController>(_idEditingController);
     Get.put<IDTextEditingController>(_idController);
     windowManager.addListener(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _entryController.forward();
+    });
   }
 
   @override
   void dispose() {
+    _orbitController.dispose();
+    _entryController.dispose();
     _idController.dispose();
     windowManager.removeListener(this);
     _allPeersLoader.clear();
@@ -376,12 +441,33 @@ class _ConnectionPageState extends State<ConnectionPage>
   /// UI for the remote ID TextField.
   /// Search for a peer.
   Widget _buildRemoteIDTextField(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     var w = Container(
       width: 320 + 20 * 2,
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
+      padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
       decoration: BoxDecoration(
-          borderRadius: const BorderRadius.all(Radius.circular(13)),
-          border: Border.all(color: Theme.of(context).colorScheme.background)),
+        borderRadius: const BorderRadius.all(Radius.circular(18)),
+        border: Border.all(
+          color: MyTheme.accent.withOpacity(isDark ? 0.2 : 0.14),
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.alphaBlend(MyTheme.accent.withOpacity(isDark ? 0.08 : 0.035),
+                theme.cardColor),
+            theme.cardColor,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.07),
+            blurRadius: 28,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
       child: Ink(
         child: Column(
           children: [
@@ -447,7 +533,30 @@ class _ConnectionPageState extends State<ConnectionPage>
                   ) {
                     updateTextAndPreserveSelection(
                         fieldTextEditingController, _idController.text);
-                    return Obx(() => TextField(
+                    return Obx(
+                      () => AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOut,
+                        decoration: BoxDecoration(
+                          color: theme.scaffoldBackgroundColor
+                              .withOpacity(isDark ? 0.62 : 0.72),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _idInputFocused.value
+                                ? MyTheme.accent.withOpacity(0.85)
+                                : theme.dividerColor.withOpacity(0.55),
+                          ),
+                          boxShadow: _idInputFocused.value
+                              ? [
+                                  BoxShadow(
+                                    color: MyTheme.accent.withOpacity(0.12),
+                                    blurRadius: 14,
+                                    spreadRadius: 1,
+                                  ),
+                                ]
+                              : const [],
+                        ),
+                        child: TextField(
                           autocorrect: false,
                           enableSuggestions: false,
                           keyboardType: TextInputType.visiblePassword,
@@ -458,14 +567,14 @@ class _ConnectionPageState extends State<ConnectionPage>
                             height: 1.4,
                           ),
                           maxLines: 1,
-                          cursorColor:
-                              Theme.of(context).textTheme.titleLarge?.color,
+                          cursorColor: MyTheme.accent,
                           decoration: InputDecoration(
                               filled: false,
                               counterText: '',
                               hintText: _idInputFocused.value
                                   ? null
                                   : translate('Enter Remote ID'),
+                              border: InputBorder.none,
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 15, vertical: 13)),
                           controller: fieldTextEditingController,
@@ -476,7 +585,9 @@ class _ConnectionPageState extends State<ConnectionPage>
                           onSubmitted: (_) {
                             onConnect();
                           },
-                        ).workaroundFreezeLinuxMint());
+                        ).workaroundFreezeLinuxMint(),
+                      ),
+                    );
                   },
                   onSelected: (option) {
                     setState(() {
@@ -549,36 +660,42 @@ class _ConnectionPageState extends State<ConnectionPage>
               ],
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 13.0),
+              padding: const EdgeInsets.only(top: 14.0),
               child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                 SizedBox(
-                  height: 28.0,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      onConnect();
-                    },
-                    child: Text(translate("Connect")),
+                  height: 36.0,
+                  child: ElevatedButton.icon(
+                    onPressed: onConnect,
+                    icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                    label: Text(translate("Connect")),
+                    style: ElevatedButton.styleFrom(
+                      elevation: 2,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  height: 28.0,
-                  width: 28.0,
+                  height: 36.0,
+                  width: 36.0,
                   decoration: BoxDecoration(
                     border: Border.all(color: Theme.of(context).dividerColor),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
                     child: StatefulBuilder(
                       builder: (context, setState) {
                         var offset = Offset(0, 0);
                         return Obx(() => InkWell(
-                              child: _menuOpen.value
-                                  ? Transform.rotate(
-                                      angle: pi,
-                                      child: Icon(IconFont.more, size: 14),
-                                    )
-                                  : Icon(IconFont.more, size: 14),
+                              borderRadius: BorderRadius.circular(10),
+                              child: AnimatedRotation(
+                                turns: _menuOpen.value ? 0.5 : 0,
+                                duration: const Duration(milliseconds: 180),
+                                child: Icon(IconFont.more, size: 14),
+                              ),
                               onTapDown: (e) {
                                 offset = e.globalPosition;
                               },
@@ -612,8 +729,8 @@ class _ConnectionPageState extends State<ConnectionPage>
                                         () => onConnect(isTcpTunneling: true)
                                       ),
                                   ]
-                                      .map<MenuEntryBase<String>>(
-                                          (e) => MenuEntryButton<String>(
+                                      .map<MenuEntryBase<String>>((e) =>
+                                          MenuEntryButton<String>(
                                             childBuilder: (TextStyle? style) =>
                                                 Text(
                                               translate(e.$1),
@@ -658,7 +775,87 @@ class _ConnectionPageState extends State<ConnectionPage>
         ),
       ),
     );
-    return Container(
-        constraints: const BoxConstraints(maxWidth: 600), child: w);
+    return FadeTransition(
+      opacity: _entryOpacity,
+      child: SlideTransition(
+        position: _entryOffset,
+        child: CustomPaint(
+          foregroundPainter: _OrbitingBorderPainter(
+            animation: _orbitController,
+            color: MyTheme.accent,
+          ),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: w,
+          ),
+        ),
+      ),
+    );
   }
+}
+
+class _OrbitingBorderPainter extends CustomPainter {
+  _OrbitingBorderPainter({
+    required this.animation,
+    required this.color,
+  }) : super(repaint: animation);
+
+  final Animation<double> animation;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width <= 2 || size.height <= 2) return;
+
+    final bounds = Offset.zero & size;
+    final borderPath = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(1, 1, size.width - 2, size.height - 2),
+          const Radius.circular(18),
+        ),
+      );
+    final metric = borderPath.computeMetrics().first;
+    final trailLength = metric.length * 0.2;
+    final start = metric.length * animation.value;
+    final end = start + trailLength;
+    final trail = Path();
+
+    if (end <= metric.length) {
+      trail.addPath(metric.extractPath(start, end), Offset.zero);
+    } else {
+      trail
+        ..addPath(metric.extractPath(start, metric.length), Offset.zero)
+        ..addPath(metric.extractPath(0, end - metric.length), Offset.zero);
+    }
+
+    final glowPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round
+      ..color = color.withOpacity(0.45)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+    final highlightPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8
+      ..strokeCap = StrokeCap.round
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          color.withOpacity(0.15),
+          color,
+          Colors.white,
+          color.withOpacity(0.15),
+        ],
+      ).createShader(bounds);
+
+    canvas
+      ..drawPath(trail, glowPaint)
+      ..drawPath(trail, highlightPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _OrbitingBorderPainter oldDelegate) =>
+      oldDelegate.animation != animation || oldDelegate.color != color;
 }

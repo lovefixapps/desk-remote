@@ -208,6 +208,11 @@ div.connect-status > span.link {
   display: inline-block;
 }
 
+div.connect-status > button.service-toggle {
+  margin-left: 1em;
+  vertical-align: middle;
+}
+
 span.connect-status-1 {
     background: #e04f5f;
 }

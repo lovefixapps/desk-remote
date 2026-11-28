@@ -6,6 +6,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common.dart';
+import 'package:flutter_hbb/common/widgets/app_brand.dart';
 import 'package:flutter_hbb/common/widgets/animated_rotation_widget.dart';
 import 'package:flutter_hbb/common/widgets/custom_password.dart';
 import 'package:flutter_hbb/consts.dart';
@@ -35,8 +36,18 @@ class DesktopHomePage extends StatefulWidget {
 const borderColor = Color(0xFF2F65BA);
 
 class _DesktopHomePageState extends State<DesktopHomePage>
-    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
+    with
+        AutomaticKeepAliveClientMixin,
+        WidgetsBindingObserver,
+        SingleTickerProviderStateMixin {
+  static const _sidebarWidthOption = 'desktop-home-sidebar-width';
+  static const _sidebarCollapsedOption = 'desktop-home-sidebar-collapsed';
+
   final _leftPaneScrollController = ScrollController();
+  late final AnimationController _cardOrbitController;
+  double _leftPaneWidth = 200;
+  bool _leftPaneCollapsed = false;
+  bool _isResizingSidebar = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -49,8 +60,12 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   var watchIsCanRecordAudio = false;
   Timer? _updateTimer;
   bool isCardClosed = false;
+  final RxBool _idCardHovered = false.obs;
+  final RxBool _passwordCardHovered = false.obs;
+  final RxBool _idMenuHovered = false.obs;
+  final RxBool _refreshPasswordHovered = false.obs;
+  final RxBool _editPasswordHovered = false.obs;
 
-  final RxBool _editHover = false.obs;
   final RxBool _block = false.obs;
 
   final GlobalKey _childKey = GlobalKey();
@@ -63,11 +78,157 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildLeftPane(context),
-        if (!isIncomingOnly) const VerticalDivider(width: 1),
+        if (isIncomingOnly)
+          buildLeftPane(context)
+        else
+          ClipRect(
+            child: AnimatedContainer(
+              duration: _isResizingSidebar
+                  ? Duration.zero
+                  : const Duration(milliseconds: 180),
+              curve: Curves.easeInOut,
+              width: _leftPaneCollapsed ? 52 : _leftPaneWidth,
+              child: _leftPaneCollapsed
+                  ? _buildCollapsedSidebar(context)
+                  : buildLeftPane(context),
+            ),
+          ),
+        if (!isIncomingOnly) _buildSidebarDivider(context),
         if (!isIncomingOnly) Expanded(child: buildRightPane(context)),
       ],
     ));
+  }
+
+  Widget _buildCollapsedSidebar(BuildContext context) {
+    return Container(
+      color: Theme.of(context).colorScheme.background,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Column(
+          children: [
+            _buildSidebarIconAction(
+              tooltip: translate('Show sidebar'),
+              icon: Icons.keyboard_double_arrow_right_rounded,
+              onPressed: () => _setSidebarCollapsed(false),
+            ),
+            const Spacer(),
+            Tooltip(
+              message: kAppDisplayName,
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: MyTheme.accent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(
+                  Icons.code_rounded,
+                  size: 15,
+                  color: MyTheme.accent,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildSidebarIconAction(
+              tooltip: translate('Settings'),
+              icon: Icons.settings_rounded,
+              onPressed: _openSidebarSettings,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSidebarIconAction({
+    required String tooltip,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: MyTheme.accent.withOpacity(0.1),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(9),
+          side: BorderSide(color: MyTheme.accent.withOpacity(0.18)),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(9),
+          onTap: onPressed,
+          child: SizedBox(
+            width: 30,
+            height: 30,
+            child: Icon(icon, size: 17, color: MyTheme.accent),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openSidebarSettings() {
+    if (bind.isOutgoingOnly()) {
+      if (DesktopSettingPage.tabKeys.isNotEmpty) {
+        DesktopSettingPage.switch2page(DesktopSettingPage.tabKeys[0]);
+      }
+      return;
+    }
+    DesktopTabPage.onAddSetting();
+  }
+
+  void _setSidebarCollapsed(bool collapsed) {
+    if (_leftPaneCollapsed == collapsed) return;
+    setState(() => _leftPaneCollapsed = collapsed);
+    unawaited(
+      bind.mainSetLocalOption(
+        key: _sidebarCollapsedOption,
+        value: collapsed ? 'Y' : 'N',
+      ),
+    );
+  }
+
+  void _persistSidebarWidth() {
+    unawaited(
+      bind.mainSetLocalOption(
+        key: _sidebarWidthOption,
+        value: _leftPaneWidth.toStringAsFixed(1),
+      ),
+    );
+  }
+
+  Widget _buildSidebarDivider(BuildContext context) {
+    return SizedBox(
+      width: 8,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.resizeLeftRight,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onHorizontalDragStart: (_) =>
+              setState(() => _isResizingSidebar = true),
+          onHorizontalDragUpdate: (details) {
+            if (_leftPaneCollapsed) return;
+            setState(() {
+              _leftPaneWidth = (_leftPaneWidth + details.delta.dx)
+                  .clamp(180.0, 320.0)
+                  .toDouble();
+            });
+          },
+          onHorizontalDragEnd: (_) {
+            setState(() => _isResizingSidebar = false);
+            _persistSidebarWidth();
+          },
+          onHorizontalDragCancel: () {
+            setState(() => _isResizingSidebar = false);
+            _persistSidebarWidth();
+          },
+          child: VerticalDivider(
+            width: 8,
+            thickness: 1,
+            color: Theme.of(context).dividerColor,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildBlock({required Widget child}) {
@@ -85,9 +246,23 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           alignment: Alignment.center,
           child: loadPowered(context),
         ),
-      Align(
-        alignment: Alignment.center,
-        child: loadLogo(),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(12, 14, 12, 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: Center(
+                child: AppBrand(iconSize: 32, fontSize: 18),
+              ),
+            ),
+            if (!isIncomingOnly)
+              _buildSidebarIconAction(
+                tooltip: translate('Hide sidebar'),
+                icon: Icons.keyboard_double_arrow_left_rounded,
+                onPressed: () => _setSidebarCollapsed(true),
+              ),
+          ],
+        ),
       ),
       buildTip(context),
       if (!isOutgoingOnly) buildIDBoard(context),
@@ -125,11 +300,11 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         ).marginOnly(bottom: 6, right: 6)
       ]);
     }
-    final textColor = Theme.of(context).textTheme.titleLarge?.color;
+    final theme = Theme.of(context);
     return ChangeNotifierProvider.value(
       value: gFFI.serverModel,
       child: Container(
-        width: isIncomingOnly ? 280.0 : 200.0,
+        width: isIncomingOnly ? 280.0 : _leftPaneWidth,
         color: Theme.of(context).colorScheme.background,
         child: Stack(
           children: [
@@ -142,36 +317,90 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                     children: children,
                   ),
                 ),
-                Expanded(child: Container())
-              ],
-            ),
-            if (isOutgoingOnly)
-              Positioned(
-                bottom: 6,
-                left: 12,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: InkWell(
-                    child: Obx(
-                      () => Icon(
-                        Icons.settings,
-                        color: _editHover.value
-                            ? textColor
-                            : Colors.grey.withOpacity(0.5),
-                        size: 22,
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            height: 34,
+                            child: OutlinedButton.icon(
+                              onPressed: _openSidebarSettings,
+                              icon:
+                                  const Icon(Icons.settings_rounded, size: 16),
+                              label: Text(
+                                translate('Settings'),
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor:
+                                    theme.textTheme.titleMedium?.color,
+                                backgroundColor: theme.scaffoldBackgroundColor,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 10),
+                                side: BorderSide(
+                                  color: theme.dividerColor.withOpacity(0.55),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: MyTheme.accent.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: MyTheme.accent.withOpacity(0.14),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 25,
+                                  height: 25,
+                                  decoration: BoxDecoration(
+                                    color: MyTheme.accent.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.verified_user_rounded,
+                                    size: 14,
+                                    color: MyTheme.accent,
+                                  ),
+                                ),
+                                const SizedBox(width: 7),
+                                Expanded(
+                                  child: Text(
+                                    kAppDisplayName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: theme.textTheme.titleMedium?.color,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    onTap: () => {
-                      if (DesktopSettingPage.tabKeys.isNotEmpty)
-                        {
-                          DesktopSettingPage.switch2page(
-                              DesktopSettingPage.tabKeys[0])
-                        }
-                    },
-                    onHover: (value) => _editHover.value = value,
                   ),
-                ),
-              )
+                )
+              ],
+            ),
           ],
         ),
       ),
@@ -187,94 +416,148 @@ class _DesktopHomePageState extends State<DesktopHomePage>
 
   buildIDBoard(BuildContext context) {
     final model = gFFI.serverModel;
-    return Container(
-      margin: const EdgeInsets.only(left: 20, right: 11),
-      height: 57,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
-        children: [
-          Container(
-            width: 2,
-            decoration: const BoxDecoration(color: MyTheme.accent),
-          ).marginOnly(top: 5),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 7),
+    final theme = Theme.of(context);
+    return MouseRegion(
+      onEnter: (_) => _idCardHovered.value = true,
+      onExit: (_) => _idCardHovered.value = false,
+      child: Obx(
+        () => Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          child: CustomPaint(
+            foregroundPainter: _SidebarOrbitPainter(
+              animation: _cardOrbitController,
+              color: MyTheme.accent,
+            ),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              margin: EdgeInsets.zero,
+              padding: const EdgeInsets.fromLTRB(9, 8, 7, 7),
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: MyTheme.accent
+                      .withOpacity(_idCardHovered.value ? 0.32 : 0.12),
+                ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    height: 25,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          translate("ID"),
-                          style: TextStyle(
-                              fontSize: 14,
-                              color: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.color
-                                  ?.withOpacity(0.5)),
-                        ).marginOnly(top: 5),
-                        buildPopupMenu(context)
-                      ],
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: MyTheme.accent.withOpacity(0.13),
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                        child: Icon(
+                          Icons.computer_rounded,
+                          size: 14,
+                          color: MyTheme.accent,
+                        ),
+                      ),
+                      const SizedBox(width: 7),
+                      Text(
+                        translate('ID'),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      buildPopupMenu(context),
+                    ],
                   ),
-                  Flexible(
-                    child: GestureDetector(
-                      onDoubleTap: () {
-                        Clipboard.setData(
-                            ClipboardData(text: model.serverId.text));
-                        showToast(translate("Copied"));
-                      },
-                      child: TextFormField(
-                        controller: model.serverId,
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.only(top: 10, bottom: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onDoubleTap: () {
+                            Clipboard.setData(
+                                ClipboardData(text: model.serverId.text));
+                            showToast(translate('Copied'));
+                          },
+                          child: SizedBox(
+                            height: 30,
+                            child: TextFormField(
+                              controller: model.serverId,
+                              readOnly: true,
+                              decoration: const InputDecoration(
+                                filled: false,
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                                isDense: true,
+                              ),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.3,
+                              ),
+                            ).workaroundFreezeLinuxMint(),
+                          ),
                         ),
-                        style: TextStyle(
-                          fontSize: 22,
+                      ),
+                      IconButton(
+                        tooltip: translate('Copy'),
+                        visualDensity: VisualDensity.compact,
+                        style: IconButton.styleFrom(
+                          shape: const CircleBorder(),
+                          hoverColor: MyTheme.accent.withOpacity(0.13),
                         ),
-                      ).workaroundFreezeLinuxMint(),
-                    ),
-                  )
+                        constraints: const BoxConstraints.tightFor(
+                          width: 28,
+                          height: 28,
+                        ),
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.copy_rounded, size: 15),
+                        onPressed: () {
+                          Clipboard.setData(
+                              ClipboardData(text: model.serverId.text));
+                          showToast(translate('Copied'));
+                        },
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget buildPopupMenu(BuildContext context) {
     final textColor = Theme.of(context).textTheme.titleLarge?.color;
-    RxBool hover = false.obs;
     return InkWell(
+      borderRadius: BorderRadius.circular(13),
       onTap: DesktopTabPage.onAddSetting,
       child: Tooltip(
         message: translate('Settings'),
         child: Obx(
-          () => CircleAvatar(
-            radius: 15,
-            backgroundColor: hover.value
-                ? Theme.of(context).scaffoldBackgroundColor
-                : Theme.of(context).colorScheme.background,
+          () => Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: _idMenuHovered.value
+                  ? MyTheme.accent.withOpacity(0.13)
+                  : Colors.transparent,
+              shape: BoxShape.circle,
+            ),
             child: Icon(
-              Icons.more_vert_outlined,
-              size: 20,
-              color: hover.value ? textColor : textColor?.withOpacity(0.5),
+              Icons.more_vert_rounded,
+              size: 17,
+              color: _idMenuHovered.value
+                  ? MyTheme.accent
+                  : textColor?.withOpacity(0.55),
             ),
           ),
         ),
       ),
-      onHover: (value) => hover.value = value,
+      onHover: (value) => _idMenuHovered.value = value,
     );
   }
 
@@ -289,33 +572,63 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   }
 
   buildPasswordBoard2(BuildContext context, ServerModel model) {
-    RxBool refreshHover = false.obs;
-    RxBool editHover = false.obs;
-    final textColor = Theme.of(context).textTheme.titleLarge?.color;
+    final theme = Theme.of(context);
     final showOneTime = model.approveMode != 'click' &&
         model.verificationMethod != kUsePermanentPassword;
-    return Container(
-      margin: EdgeInsets.only(left: 20.0, right: 16, top: 13, bottom: 13),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
-        children: [
-          Container(
-            width: 2,
-            height: 52,
-            decoration: BoxDecoration(color: MyTheme.accent),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 7),
+    return MouseRegion(
+      onEnter: (_) => _passwordCardHovered.value = true,
+      onExit: (_) => _passwordCardHovered.value = false,
+      child: Obx(
+        () => Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+          child: CustomPaint(
+            foregroundPainter: _SidebarOrbitPainter(
+              animation: _cardOrbitController,
+              color: MyTheme.accent,
+            ),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              margin: EdgeInsets.zero,
+              padding: const EdgeInsets.fromLTRB(9, 8, 7, 7),
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: MyTheme.accent
+                      .withOpacity(_passwordCardHovered.value ? 0.32 : 0.12),
+                ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AutoSizeText(
-                    translate("One-time Password"),
-                    style: TextStyle(
-                        fontSize: 14, color: textColor?.withOpacity(0.5)),
-                    maxLines: 1,
+                  Row(
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: MyTheme.accent.withOpacity(0.13),
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                        child: Icon(
+                          Icons.key_rounded,
+                          size: 14,
+                          color: MyTheme.accent,
+                        ),
+                      ),
+                      const SizedBox(width: 7),
+                      Expanded(
+                        child: AutoSizeText(
+                          translate('One-time Password'),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
                   ),
                   Row(
                     children: [
@@ -325,18 +638,23 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                             if (showOneTime) {
                               Clipboard.setData(
                                   ClipboardData(text: model.serverPasswd.text));
-                              showToast(translate("Copied"));
+                              showToast(translate('Copied'));
                             }
                           },
                           child: TextFormField(
                             controller: model.serverPasswd,
                             readOnly: true,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
+                              filled: false,
                               border: InputBorder.none,
-                              contentPadding:
-                                  EdgeInsets.only(top: 14, bottom: 10),
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
                             ),
-                            style: TextStyle(fontSize: 15),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.2,
+                            ),
                           ).workaroundFreezeLinuxMint(),
                         ),
                       ),
@@ -345,35 +663,87 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                           onPressed: () => bind.mainUpdateTemporaryPassword(),
                           child: Tooltip(
                             message: translate('Refresh Password'),
-                            child: Obx(() => RotatedBox(
-                                quarterTurns: 2,
-                                child: Icon(
-                                  Icons.refresh,
-                                  color: refreshHover.value
-                                      ? textColor
-                                      : Color(0xFFDDDDDD),
-                                  size: 22,
-                                ))),
-                          ),
-                          onHover: (value) => refreshHover.value = value,
-                        ).marginOnly(right: 8, top: 4),
-                      if (!bind.isDisableSettings())
-                        InkWell(
-                          child: Tooltip(
-                            message: translate('Change Password'),
-                            child: Obx(
-                              () => Icon(
-                                Icons.edit,
-                                color: editHover.value
-                                    ? textColor
-                                    : Color(0xFFDDDDDD),
-                                size: 22,
-                              ).marginOnly(right: 8, top: 4),
+                            child: SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: Obx(
+                                () => AnimatedContainer(
+                                  duration: const Duration(milliseconds: 150),
+                                  decoration: BoxDecoration(
+                                    color: _refreshPasswordHovered.value
+                                        ? MyTheme.accent.withOpacity(0.13)
+                                        : Colors.transparent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: RotatedBox(
+                                      quarterTurns: 2,
+                                      child: Icon(
+                                        Icons.refresh_rounded,
+                                        color: _refreshPasswordHovered.value
+                                            ? MyTheme.accent
+                                            : theme.hintColor,
+                                        size: 17,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
+                          onHover: (value) =>
+                              _refreshPasswordHovered.value = value,
+                        ),
+                      if (!bind.isDisableSettings())
+                        InkWell(
+                          borderRadius: BorderRadius.circular(6),
                           onTap: () => DesktopSettingPage.switch2page(
                               SettingsTabKey.safety),
-                          onHover: (value) => editHover.value = value,
+                          onHover: (value) =>
+                              _editPasswordHovered.value = value,
+                          child: SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: Obx(
+                              () => AnimatedContainer(
+                                duration: const Duration(milliseconds: 150),
+                                decoration: BoxDecoration(
+                                  color: _editPasswordHovered.value
+                                      ? MyTheme.accent.withOpacity(0.13)
+                                      : Colors.transparent,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    Icons.edit_rounded,
+                                    color: _editPasswordHovered.value
+                                        ? MyTheme.accent
+                                        : theme.hintColor,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (showOneTime)
+                        IconButton(
+                          tooltip: translate('Copy'),
+                          visualDensity: VisualDensity.compact,
+                          style: IconButton.styleFrom(
+                            shape: const CircleBorder(),
+                            hoverColor: MyTheme.accent.withOpacity(0.13),
+                          ),
+                          constraints: const BoxConstraints.tightFor(
+                              width: 28, height: 28),
+                          padding: EdgeInsets.zero,
+                          icon: Icon(Icons.copy_rounded,
+                              size: 14, color: theme.hintColor),
+                          onPressed: () {
+                            Clipboard.setData(
+                                ClipboardData(text: model.serverPasswd.text));
+                            showToast(translate('Copied'));
+                          },
                         ),
                     ],
                   ),
@@ -381,47 +751,59 @@ class _DesktopHomePageState extends State<DesktopHomePage>
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   buildTip(BuildContext context) {
     final isOutgoingOnly = bind.isOutgoingOnly();
+    final theme = Theme.of(context);
     return Padding(
-      padding:
-          const EdgeInsets.only(left: 20.0, right: 16, top: 16.0, bottom: 5),
+      padding: const EdgeInsets.fromLTRB(14, 14, 12, 8),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
+          Row(
             children: [
-              if (!isOutgoingOnly)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    translate("Your Desktop"),
-                    style: Theme.of(context).textTheme.titleLarge,
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: MyTheme.accent.withOpacity(0.14),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(
+                  isOutgoingOnly
+                      ? Icons.devices_rounded
+                      : Icons.computer_rounded,
+                  size: 17,
+                  color: MyTheme.accent,
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  translate(isOutgoingOnly ? 'Connect' : 'Your Desktop'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
+              ),
             ],
           ),
-          SizedBox(
-            height: 10.0,
+          const SizedBox(height: 7),
+          Text(
+            translate(isOutgoingOnly ? 'outgoing_only_desk_tip' : 'desk_tip'),
+            overflow: TextOverflow.clip,
+            style: theme.textTheme.bodySmall?.copyWith(
+              height: 1.35,
+              color: theme.textTheme.bodySmall?.color?.withOpacity(0.72),
+            ),
           ),
-          if (!isOutgoingOnly)
-            Text(
-              translate("desk_tip"),
-              overflow: TextOverflow.clip,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          if (isOutgoingOnly)
-            Text(
-              translate("outgoing_only_desk_tip"),
-              overflow: TextOverflow.clip,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
         ],
       ),
     );
@@ -581,7 +963,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
               exit(0);
             }
           },
-          child: Text(quitButtonText.isEmpty ? translate('Quit') : quitButtonText),
+          child:
+              Text(quitButtonText.isEmpty ? translate('Quit') : quitButtonText),
         ),
       ).marginAll(14);
     }
@@ -621,28 +1004,45 @@ class _DesktopHomePageState extends State<DesktopHomePage>
               0, marginTop, 0, bind.isIncomingOnly() ? marginTop : 0),
           child: Container(
               decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [
-                  Color.fromARGB(255, 226, 66, 188),
-                  Color.fromARGB(255, 244, 114, 124),
-                ],
-              )),
-              padding: EdgeInsets.all(20),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: MyTheme.accent.withOpacity(0.12),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF1B4E91),
+                      Color(0xFF493B82),
+                    ],
+                  )),
+              padding: EdgeInsets.all(16),
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: (title.isNotEmpty
                           ? <Widget>[
-                              Center(
-                                  child: Text(
-                                translate(title),
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15),
-                              ).marginOnly(bottom: 6)),
+                              Row(
+                                children: [
+                                  Icon(Icons.info_outline_rounded,
+                                      color: Colors.white, size: 18),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      translate(title),
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14),
+                                    ),
+                                  ),
+                                ],
+                              ).marginOnly(bottom: 8),
                             ]
                           : <Widget>[]) +
                       <Widget>[
@@ -650,11 +1050,11 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                           Text(
                             translate(content),
                             style: TextStyle(
-                                height: 1.5,
+                                height: 1.45,
                                 color: Colors.white,
                                 fontWeight: FontWeight.normal,
-                                fontSize: 13),
-                          ).marginOnly(bottom: 20)
+                                fontSize: 12),
+                          ).marginOnly(bottom: 14)
                       ] +
                       (btnText.isNotEmpty
                           ? <Widget>[
@@ -712,6 +1112,16 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   void initState() {
     super.initState();
+    final storedSidebarWidth =
+        double.tryParse(bind.mainGetLocalOption(key: _sidebarWidthOption));
+    if (storedSidebarWidth != null && storedSidebarWidth.isFinite) {
+      _leftPaneWidth = storedSidebarWidth.clamp(180.0, 320.0).toDouble();
+    }
+    _leftPaneCollapsed = mainGetLocalBoolOptionSync(_sidebarCollapsedOption);
+    _cardOrbitController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    )..repeat();
     _updateTimer = periodic_immediate(const Duration(seconds: 1), () async {
       await gFFI.serverModel.fetchID();
       final error = await bind.mainGetError();
@@ -782,7 +1192,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
 
     bool isChattyMethod(String methodName) {
       switch (methodName) {
-        case kWindowBumpMouse: return true;
+        case kWindowBumpMouse:
+          return true;
       }
 
       return false;
@@ -791,7 +1202,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     rustDeskWinManager.setMethodHandler((call, fromWindowId) async {
       if (!isChattyMethod(call.method)) {
         debugPrint(
-          "[Main] call ${call.method} with args ${call.arguments} from window $fromWindowId");
+            "[Main] call ${call.method} with args ${call.arguments} from window $fromWindowId");
       }
       if (call.method == kWindowMainWindowOnTop) {
         windowOnTop(null);
@@ -820,9 +1231,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           loginMethod: call.arguments['loginMethod'] ?? '',
         );
       } else if (call.method == kWindowBumpMouse) {
-        return RdPlatformChannel.instance.bumpMouse(
-          dx: call.arguments['dx'],
-          dy: call.arguments['dy']);
+        return RdPlatformChannel.instance
+            .bumpMouse(dx: call.arguments['dx'], dy: call.arguments['dy']);
       } else if (call.method == kWindowEventMoveTabToNewWindow) {
         final args = call.arguments.split(',');
         int? windowId;
@@ -888,6 +1298,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     _uniLinksSubscription?.cancel();
     Get.delete<RxBool>(tag: 'stop-service');
     _updateTimer?.cancel();
+    _cardOrbitController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -899,6 +1310,72 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       shouldBeBlocked(_block, canBeBlocked);
     }
   }
+}
+
+class _SidebarOrbitPainter extends CustomPainter {
+  _SidebarOrbitPainter({
+    required this.animation,
+    required this.color,
+  }) : super(repaint: animation);
+
+  final Animation<double> animation;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width <= 3 || size.height <= 3) return;
+
+    final bounds = Offset.zero & size;
+    final path = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(1.5, 1.5, size.width - 3, size.height - 3),
+          const Radius.circular(11),
+        ),
+      );
+    final metric = path.computeMetrics().first;
+    final trailLength = metric.length * 0.14;
+    final start = metric.length * animation.value;
+    final end = start + trailLength;
+    final trail = Path();
+
+    if (end <= metric.length) {
+      trail.addPath(metric.extractPath(start, end), Offset.zero);
+    } else {
+      trail
+        ..addPath(metric.extractPath(start, metric.length), Offset.zero)
+        ..addPath(metric.extractPath(0, end - metric.length), Offset.zero);
+    }
+
+    final glowPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round
+      ..color = color.withOpacity(0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+    final highlightPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2
+      ..strokeCap = StrokeCap.round
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          color.withOpacity(0.1),
+          color.withOpacity(0.85),
+          Colors.white.withOpacity(0.9),
+          color.withOpacity(0.1),
+        ],
+      ).createShader(bounds);
+
+    canvas
+      ..drawPath(trail, glowPaint)
+      ..drawPath(trail, highlightPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SidebarOrbitPainter oldDelegate) =>
+      oldDelegate.animation != animation || oldDelegate.color != color;
 }
 
 void setPasswordDialog({VoidCallback? notEmptyCallback}) async {
