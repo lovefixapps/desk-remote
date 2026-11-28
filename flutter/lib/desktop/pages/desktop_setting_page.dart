@@ -2727,76 +2727,206 @@ class _AboutState extends State<_About> {
       final buildDate = data['buildDate'].toString();
       final fingerprint = data['fingerprint'].toString();
       final myId = data['myId'].toString();
-      const linkStyle = TextStyle(decoration: TextDecoration.underline);
+      final theme = Theme.of(context);
+      final linkStyle = TextStyle(
+        decoration: TextDecoration.underline,
+        color: theme.colorScheme.primary,
+      );
       final scrollController = ScrollController();
+
+      Widget detailRow(IconData icon, String label, String value) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 7),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 24,
+                child: Icon(
+                  icon,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              SizedBox(
+                width: 104,
+                child: Text(
+                  label,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  value,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
       return SingleChildScrollView(
         controller: scrollController,
         child: _Card(title: translate('About RustDesk'), children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(
-                height: 8.0,
-              ),
-              SelectionArea(
-                  child: Text('${translate('Version')}: $version')
-                      .marginSymmetric(vertical: 4.0)),
-              SelectionArea(
-                  child: Text('${translate('Build Date')}: $buildDate')
-                      .marginSymmetric(vertical: 4.0)),
-              if (!isWeb)
+          Padding(
+            padding: const EdgeInsets.only(
+              left: _kContentHMargin,
+              top: 8,
+              right: _kContentHMargin,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'FIX-Desk helps you connect to and control computers remotely, provide support, and transfer files.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 18),
                 SelectionArea(
-                    child: Text('${translate('Fingerprint')}: $fingerprint')
-                        .marginSymmetric(vertical: 4.0)),
-              SelectionArea(
-                  child: Text('${translate('ID')}: $myId')
-                      .marginSymmetric(vertical: 4.0)),
-              InkWell(
-                  onTap: () {
-                    launchUrlString('https://rustdesk.com/privacy.html');
-                  },
-                  child: Text(
-                    translate('Privacy Statement'),
-                    style: linkStyle,
-                  ).marginSymmetric(vertical: 4.0)),
-              InkWell(
-                  onTap: () {
-                    launchUrlString(
-                        'https://github.com/lovefixapps/desk-remote');
-                  },
-                  child: Text(
-                    translate('Website'),
-                    style: linkStyle,
-                  ).marginSymmetric(vertical: 4.0)),
-              Container(
-                decoration: const BoxDecoration(color: Color(0xFF2c8cff)),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
-                child: SelectionArea(
-                    child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Copyright © ${DateTime.now().toString().substring(0, 4)} Purslane Tech Pte. Ltd.\n$license',
-                            style: const TextStyle(color: Colors.white),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withOpacity(0.45),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color:
+                            theme.colorScheme.outlineVariant.withOpacity(0.5),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        detailRow(
+                          Icons.info_outline_rounded,
+                          translate('Version'),
+                          version,
+                        ),
+                        Divider(
+                          height: 1,
+                          color: theme.colorScheme.outlineVariant
+                              .withOpacity(0.45),
+                        ),
+                        detailRow(
+                          Icons.calendar_today_outlined,
+                          translate('Build Date'),
+                          buildDate,
+                        ),
+                        if (!isWeb) ...[
+                          Divider(
+                            height: 1,
+                            color: theme.colorScheme.outlineVariant
+                                .withOpacity(0.45),
                           ),
-                          Text(
-                            translate('Slogan_tip'),
-                            style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white),
-                          )
+                          detailRow(
+                            Icons.fingerprint_rounded,
+                            translate('Fingerprint'),
+                            fingerprint,
+                          ),
                         ],
+                        Divider(
+                          height: 1,
+                          color: theme.colorScheme.outlineVariant
+                              .withOpacity(0.45),
+                        ),
+                        detailRow(
+                          Icons.tag_rounded,
+                          translate('ID'),
+                          myId,
+                        ),
+                        if (license.trim().isNotEmpty) ...[
+                          Divider(
+                            height: 1,
+                            color: theme.colorScheme.outlineVariant
+                                .withOpacity(0.45),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                license,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _accentColor.withOpacity(
+                      theme.brightness == Brightness.dark ? 0.14 : 0.07,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _accentColor.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.code_rounded,
+                        color: _accentColor,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Dev : Samnang',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 18,
+                  runSpacing: 8,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        launchUrlString('https://rustdesk.com/privacy.html');
+                      },
+                      child: Text(
+                        translate('Privacy Statement'),
+                        style: linkStyle,
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () {
+                        launchUrlString(
+                            'https://github.com/lovefixapps/desk-remote');
+                      },
+                      child: Text(
+                        translate('Website'),
+                        style: linkStyle,
                       ),
                     ),
                   ],
-                )),
-              ).marginSymmetric(vertical: 4.0)
-            ],
-          ).marginOnly(left: _kContentHMargin)
+                ),
+              ],
+            ),
+          ),
         ]),
       );
     });
@@ -2825,7 +2955,7 @@ Widget _Card(
     'Network' => Icons.hub_outlined,
     'Display' => Icons.desktop_windows_outlined,
     'Printer' => Icons.print_outlined,
-    'About' => Icons.info_outline_rounded,
+    'About' || 'About RustDesk' => Icons.info_outline_rounded,
     _ => Icons.tune_rounded,
   };
 

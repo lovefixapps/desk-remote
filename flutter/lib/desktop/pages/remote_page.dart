@@ -24,6 +24,7 @@ import '../widgets/remote_toolbar.dart';
 import '../widgets/kb_layout_type_chooser.dart';
 import '../widgets/tabbar_widget.dart';
 import 'macos_full_screen_focus_recovery.dart';
+import 'remote_cursor_visibility.dart';
 
 import 'package:flutter_hbb/native/custom_cursor.dart'
     if (dart.library.html) 'package:flutter_hbb/web/custom_cursor.dart';
@@ -983,6 +984,7 @@ class _RemotePageState extends State<RemotePage>
                         cursorOverImage: _cursorOverImage,
                         keyboardEnabled: _keyboardEnabled,
                         remoteCursorMoved: _remoteCursorMoved,
+                        showRemoteCursor: _showRemoteCursor,
                         listenerBuilder: (child) =>
                             _buildRawTouchAndPointerRegion(
                                 child, enterView, leaveView),
@@ -996,13 +998,15 @@ class _RemotePageState extends State<RemotePage>
     ];
 
     if (!_ffi.canvasModel.cursorEmbedded) {
-      paints
-          .add(Obx(() => _showRemoteCursor.isFalse || _remoteCursorMoved.isFalse
-              ? Offstage()
-              : CursorPaint(
-                  id: widget.id,
-                  zoomCursor: _zoomCursor,
-                )));
+      paints.add(Obx(() => shouldRenderRemoteCursor(
+              optionEnabled: _showRemoteCursor.isTrue,
+              viewOnly: _ffi.ffiModel.viewOnly,
+              remoteCursorMoved: _remoteCursorMoved.isTrue)
+          ? CursorPaint(
+              id: widget.id,
+              zoomCursor: _zoomCursor,
+            )
+          : Offstage()));
     }
     paints.add(
       Positioned(
@@ -1088,6 +1092,7 @@ class ImagePaint extends StatefulWidget {
   final RxBool cursorOverImage;
   final RxBool keyboardEnabled;
   final RxBool remoteCursorMoved;
+  final RxBool showRemoteCursor;
   final Widget Function(Widget)? listenerBuilder;
 
   ImagePaint(
@@ -1098,6 +1103,7 @@ class ImagePaint extends StatefulWidget {
       required this.cursorOverImage,
       required this.keyboardEnabled,
       required this.remoteCursorMoved,
+      required this.showRemoteCursor,
       this.listenerBuilder})
       : super(key: key);
 
@@ -1114,6 +1120,7 @@ class _ImagePaintState extends State<ImagePaint> {
   RxBool get cursorOverImage => widget.cursorOverImage;
   RxBool get keyboardEnabled => widget.keyboardEnabled;
   RxBool get remoteCursorMoved => widget.remoteCursorMoved;
+  RxBool get showRemoteCursor => widget.showRemoteCursor;
   Widget Function(Widget)? get listenerBuilder => widget.listenerBuilder;
 
   @override
@@ -1145,7 +1152,11 @@ class _ImagePaintState extends State<ImagePaint> {
                           ? SystemMouseCursors.none
                           : keyboardEnabled.isTrue
                               ? (() {
-                                  if (remoteCursorMoved.isTrue) {
+                                  if (shouldRenderRemoteCursor(
+                                    optionEnabled: showRemoteCursor.isTrue,
+                                    viewOnly: widget.ffi.ffiModel.viewOnly,
+                                    remoteCursorMoved: remoteCursorMoved.isTrue,
+                                  )) {
                                     _lastRemoteCursorMoved = true;
                                     return SystemMouseCursors.none;
                                   } else {

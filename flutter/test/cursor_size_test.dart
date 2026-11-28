@@ -68,6 +68,8 @@ class _Peer extends Fake implements FfiModel {
   bool get isPeerLinux => pi.platform == kPeerPlatformLinux;
   @override
   bool get isPeerWindows => pi.platform == kPeerPlatformWindows;
+  @override
+  bool get viewOnly => false;
 }
 
 class _FFI extends Fake implements FFI {
@@ -318,6 +320,7 @@ Future<void> _checkView(WidgetTester tester, (String, bool) mode,
           cursorOverImage: true.obs,
           keyboardEnabled: true.obs,
           remoteCursorMoved: false.obs,
+          showRemoteCursor: false.obs,
         ),
       ),
     ));
